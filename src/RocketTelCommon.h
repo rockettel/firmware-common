@@ -2,7 +2,9 @@
 #define __ROCKETTEL_COMMON__
 
 #include <Arduino.h>
+#ifdef ROCKETTEL_BASESTATION
 #include <ArduinoJson.h>
+#endif
 
 
 #define ROCKETTEL_HEADERBYTE1 0x3A // 00111010
@@ -31,7 +33,9 @@ class DataPacket {
         void writeBitsInt(uint8_t bits, uint32_t value);
        
         void getBuffer(uint8_t *buffer, uint32_t *length);
+#ifdef ROCKETTEL_BASESTATION
         void unpackToJSON(DynamicJsonDocument &output);
+#endif
 };
 
 #endif

@@ -100,6 +100,7 @@ DataPacket::getBuffer(uint8_t *buffer, uint32_t *length) {
     memcpy(buffer, _buffer, *length);
 }
 
+#ifdef ROCKETTEL_BASESTATION
 void
 DataPacket::unpackToJSON(DynamicJsonDocument &output) {
     uint8_t hdrByte1 = readBitsInt(8);
@@ -109,5 +110,6 @@ DataPacket::unpackToJSON(DynamicJsonDocument &output) {
     output["hdrByte2"] = hdrByte2;
     output["version"] = version;
 }
+#endif
 
 
