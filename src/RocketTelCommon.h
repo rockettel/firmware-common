@@ -17,20 +17,21 @@ class DataPacket {
         uint32 _curbit = 0;
         
     protected:
-    /*
-        template <uint32_t offset, uint32_t count>
-        inline uint32_t ReadBits(const uint8_t *src, uint32_t accum);
-    */
+
+        inline uint32_t readBits(uint32_t count, uint32_t accum);
+        inline void writeBits(uint32_t count, uint32_t value);
     public:
         DataPacket(uint32_t size);
-        DataPacket(String str);
+        DataPacket(uint8_t *buffer, uint32_t length);
         ~DataPacket();
         
         
         
-//        uint32_t readBitsInt(uint8_t bits);
-        
-//        void unpackToJSON(DynamicJsonDocument output);
+        uint32_t readBitsInt(uint8_t bits);
+        void writeBitsInt(uint8_t bits, uint32_t value);
+       
+        void getBuffer(uint8_t *buffer, uint32_t *length);
+        void unpackToJSON(DynamicJsonDocument &output);
 };
 
 #endif
