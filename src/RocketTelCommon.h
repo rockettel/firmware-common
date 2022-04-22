@@ -7,16 +7,16 @@
 #endif
 
 
-#define ROCKETTEL_HEADERBYTE1 0x3A // 00111010
+#define ROCKETTEL_HEADER4_1 0x3 // 00111010
 #define ROCKETTEL_VERSION     0x01
-#define ROCKETTEL_HEADERBYTE2 0xC5 // 11000101
+#define ROCKETTEL_HEADER4_2 0xC // 11000101
 
 class DataPacket {
     private:
         uint8_t *_buffer = NULL; 
-        uint32 _size = 0;
-        uint32 _endbit = 0;
-        uint32 _curbit = 0;
+        uint32_t _size = 0;
+        uint32_t _endbit = 0;
+        uint32_t _curbit = 0;
         
     protected:
 
@@ -33,6 +33,8 @@ class DataPacket {
         void writeBitsInt(uint8_t bits, uint32_t value);
        
         void getBuffer(uint8_t *buffer, uint32_t *length);
+
+        void initHeader();
 #ifdef ROCKETTEL_BASESTATION
         void unpackToJSON(DynamicJsonDocument &output);
 #endif

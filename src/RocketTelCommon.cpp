@@ -100,15 +100,28 @@ DataPacket::getBuffer(uint8_t *buffer, uint32_t *length) {
     memcpy(buffer, _buffer, *length);
 }
 
+void
+DataPacket::initHeader() {
+    writeBitsInt(4, ROCKETTEL_HEADER4_1);
+    writeBitsInt(8, ROCKETTEL_VERSION);
+    writeBitsInt(4, ROCKETTEL_HEADER4_2);
+}
+
 #ifdef ROCKETTEL_BASESTATION
 void
 DataPacket::unpackToJSON(DynamicJsonDocument &output) {
-    uint8_t hdrByte1 = readBitsInt(8);
+    uint8_t hdr4_1 = readBitsInt(4);
     uint8_t version = readBitsInt(8);
-    uint8_t hdrByte2 = readBitsInt(8);
-    output["hdrByte1"] = hdrByte1;
-    output["hdrByte2"] = hdrByte2;
-    output["version"] = version;
+    uint8_t hdr4_2 = readBitsInt(4);
+    if (hdr4_1 != ROCKETTEL_HEADER4_1 || hdr4_2 != ROCKETTEL_HEADER4_2) {
+        // fixme error logging
+        return;
+    }
+    if (version > ROCKETTEL_VERSION) {
+        // fixme error logging
+        return;
+    }
+    
 }
 #endif
 
