@@ -1,6 +1,8 @@
+#define __ROCKETTEL_COMMON_CPP__
 #include "RocketTelCommon.h"
     
 DataPacket::DataPacket(uint32_t size) {
+    _writeable = true;
     _buffer = new uint8_t(size);
     _size = size;
     bzero(_buffer, _size);
@@ -8,6 +10,7 @@ DataPacket::DataPacket(uint32_t size) {
 }
 
 DataPacket::DataPacket(uint8_t *buffer, uint32_t length) {
+    _writeable = false;
     _buffer = new uint8_t(length);
     _size = length;
     memcpy(_buffer, buffer, _size);
@@ -24,6 +27,8 @@ DataPacket::~DataPacket() {
 inline uint32_t 
 DataPacket::readBits(uint32_t count, uint32_t accum = 0)
 {
+    if (_writeable) { return 0; }
+
     // Base of recursion
     if (count == 0)
         return accum;
@@ -49,6 +54,8 @@ DataPacket::readBits(uint32_t count, uint32_t accum = 0)
 inline void 
 DataPacket::writeBits(uint32_t count, uint32_t value)
 {
+    if (!_writeable) { return; }
+
     // Recursion base
     if (count == 0)
         return;
@@ -101,10 +108,13 @@ DataPacket::getBuffer(uint8_t *buffer, uint32_t *length) {
 }
 
 void
-DataPacket::initHeader() {
+DataPacket::initHeader(uint8_t group, uint8_t id) {
     writeBitsInt(4, ROCKETTEL_HEADER4_1);
     writeBitsInt(8, ROCKETTEL_VERSION);
     writeBitsInt(4, ROCKETTEL_HEADER4_2);
+    writeBitsInt(6, group);
+    writeBitsInt(6, id);
+
 }
 
 #ifdef ROCKETTEL_BASESTATION
@@ -114,13 +124,38 @@ DataPacket::unpackToJSON(DynamicJsonDocument &output) {
     uint8_t version = readBitsInt(8);
     uint8_t hdr4_2 = readBitsInt(4);
     if (hdr4_1 != ROCKETTEL_HEADER4_1 || hdr4_2 != ROCKETTEL_HEADER4_2) {
-        // fixme error logging
+        output["rocket"]["error"] = "Not a RocketTel packet";
         return;
     }
+    output["rocket"]["group"] = readBitsInt(6);
+    output["rocket"]["id"] = readBitsInt(6);
     if (version > ROCKETTEL_VERSION) {
-        // fixme error logging
+        output["rocket"]["error"] = "RocketTel AVPack too new";
         return;
     }
+
+
+    while((_endbit-_curbit) > 6) {
+        uint8_t hdr = readBitsInt(6);
+        if (hdr == 0x0) {
+            return;
+        }
+
+        switch(hdr) {
+        case HEADER_GPS:
+            break;
+        default:
+            for (int i=0; i<(sizeof(rt_data_types)/sizeof(struct rt_data_type)); i++) {
+                if (hdr == rt_data_types[i].header) {
+
+                }
+            }
+            break;
+
+        }
+    }
+
+
     
 }
 #endif
