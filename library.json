@@ -16,21 +16,6 @@
   },
   "version": "0.1",
   "examples": [],
-  "frameworks": [
-    "arduino"
-  ],
-  "platforms": [
-    "asrmicro650x",
-    "atmelavr",
-    "atmelsam",
-    "espressif8266",
-    "espressif32",
-    "teensy",
-    "linux_x86_64",
-    "windows_x86",
-    "ststm32"
-  ],
-  "build" : {
-    "flags": "-std=c++11"
-  }
+  "frameworks": "*",
+  "platforms": "*"
 }
