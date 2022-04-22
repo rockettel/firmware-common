@@ -1,0 +1,36 @@
+{
+  "name": "firmware-common",
+  "description": "Common rockettel firmware",
+  "homepage": "https://github.com/rockettel/firmware-common",
+  "license": "GPL-3.0",
+  "authors":
+  {
+    "name": "Jim Duchek",
+    "email": "jim.duchek@gmail.com",
+    "maintainer": true
+  },
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/rockettel/firmware-common"
+  },
+  "version": "0.1",
+  "examples": [],
+  "frameworks": [
+    "arduino"
+  ],
+  "platforms": [
+    "asrmicro650x",
+    "atmelavr",
+    "atmelsam",
+    "espressif8266",
+    "espressif32",
+    "teensy",
+    "linux_x86_64",
+    "windows_x86",
+    "ststm32"
+  ],
+  "build" : {
+    "flags": "-std=c++11"
+  }
+}
