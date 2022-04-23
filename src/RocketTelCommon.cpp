@@ -24,8 +24,8 @@ DataPacket::~DataPacket() {
 }
 
 
-inline uint32_t 
-DataPacket::readBits(uint32_t count, uint32_t accum = 0)
+inline uint64_t 
+DataPacket::readBits(uint32_t count, uint64_t accum = 0)
 {
     if (_writeable) { return 0; }
 
@@ -52,7 +52,7 @@ DataPacket::readBits(uint32_t count, uint32_t accum = 0)
 }
 
 inline void 
-DataPacket::writeBits(uint32_t count, uint32_t value)
+DataPacket::writeBits(uint32_t count, uint64_t value)
 {
     if (!_writeable) { return; }
 
@@ -117,7 +117,33 @@ DataPacket::initHeader(uint8_t group, uint8_t id) {
 
 }
 
+const int latVals = int(pow(2.0, 23.5));
+const int lonVals = int(pow(2.0, 24.5));
+
+#ifdef ROCKETTEL_AVPACK
+void
+DataPacket::packGPS(TinyGPSPlus gps) {
+    
+    int64_t ulat=(int64_t(lat*latVals/180)+latVals/2)%latVals;
+    int64_t ulon=(int64_t(lon*lonVals/360)+lonVals/2)%lonVals;
+    writeBits(48, (ulat*lonVals)+ulon);
+}
+#endif
+
+
+
+
 #ifdef ROCKETTEL_BASESTATION
+void 
+DataPacket::unpackGPS(DynamicJsonDocument &output) {
+    int64_t c = readBits(48);
+    int64_t ulat=(c/lonVals-latVals/2)*180;
+    int64_t ulon=(c%lonVals-lonVals/2)*360;
+    
+    output["rocket"]["gps"]["lat"] = (float)ulat/(float)latVals;
+    output["rocket"]["gps"]["lon"] = (float)ulon/(float)lonVals;
+}
+
 void
 DataPacket::unpackToJSON(DynamicJsonDocument &output) {
     uint8_t hdr4_1 = readBitsInt(4);
@@ -143,6 +169,7 @@ DataPacket::unpackToJSON(DynamicJsonDocument &output) {
 
         switch(hdr) {
         case HEADER_GPS:
+            unpackGPS(output);
             break;
         default:
             for (int i=0; i<(sizeof(rt_data_types)/sizeof(struct rt_data_type)); i++) {

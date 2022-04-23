@@ -2,9 +2,15 @@
 #define __ROCKETTEL_COMMON_H__
 
 #include <Arduino.h>
+
 #ifdef ROCKETTEL_BASESTATION
 #include <ArduinoJson.h>
 #endif
+
+#ifdef ROCKETTEL_AVPACK
+#include <TinyGPSPlus.h>
+#endif
+
 
 
 #define ROCKETTEL_HEADER4_1 0x3 // 00111010
@@ -49,14 +55,15 @@ class DataPacket {
         bool _writeable;
         
     protected:
-
-        inline uint32_t readBits(uint32_t count, uint32_t accum);
-        inline void writeBits(uint32_t count, uint32_t value);
+#ifdef ROCKETTEL_BASESTATION
+        void unpackGPS(DynamicJsonDocument &output);
+#endif
+        inline uint64_t readBits(uint32_t count, uint64_t accum);
+        inline void writeBits(uint32_t count, uint64_t value);
     public:
         DataPacket(uint32_t size);
         DataPacket(uint8_t *buffer, uint32_t length);
         ~DataPacket();
-        
         
         
         uint32_t readBitsInt(uint8_t bits);
@@ -65,6 +72,11 @@ class DataPacket {
         void getBuffer(uint8_t *buffer, uint32_t *length);
 
         void initHeader(uint8_t group, uint8_t id);
+
+#ifdef ROCKETTEL_AVPACK
+        void packGPSData(TinyGPSPlus gps);
+#endif
+
 #ifdef ROCKETTEL_BASESTATION
         void unpackToJSON(DynamicJsonDocument &output);
 #endif
