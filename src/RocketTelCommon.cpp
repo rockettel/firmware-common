@@ -3,7 +3,7 @@
     
 DataPacket::DataPacket(uint32_t size) {
     _writeable = true;
-    _buffer = new uint8_t(size);
+    _buffer = new uint8_t[size];
     _size = size;
     bzero(_buffer, _size);
     _endbit = 0;
@@ -95,9 +95,6 @@ DataPacket::readBitsInt(uint8_t bits) {
 void
 DataPacket::writeBitsInt(uint8_t bits, uint32_t value) {
     writeBits(bits, value);
-    if (_endbit < _curbit) {
-        _endbit = _curbit;
-    }
 }
 
 void 
