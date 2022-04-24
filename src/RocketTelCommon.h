@@ -45,23 +45,23 @@ struct rt_data_type rt_data_types[] = {
 };
 #endif
 
+#define RT_BUF_SIZE 64
 
 class DataPacket {
     private:
-        uint8_t *_buffer = NULL; 
-        uint32_t _size = 0;
+        uint8_t _buffer[RT_BUF_SIZE];
         uint32_t _endbit = 0;
         uint32_t _curbit = 0;
         bool _writeable;
         
     protected:
 #ifdef ROCKETTEL_BASESTATION
-        void unpackGPS(DynamicJsonDocument &output);
+        void unpackGPS(JsonDocument &output);
 #endif
         inline uint64_t readBits(uint32_t count, uint64_t accum);
         inline void writeBits(uint32_t count, uint64_t value);
     public:
-        DataPacket(uint32_t size);
+        DataPacket();
         DataPacket(uint8_t *buffer, uint32_t length);
         ~DataPacket();
         
@@ -78,7 +78,7 @@ class DataPacket {
 #endif
 
 #ifdef ROCKETTEL_BASESTATION
-        void unpackToJSON(DynamicJsonDocument &output);
+        void unpackToJSON(JsonDocument &output);
 #endif
 };
 

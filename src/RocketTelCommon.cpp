@@ -1,26 +1,28 @@
 #define __ROCKETTEL_COMMON_CPP__
 #include "RocketTelCommon.h"
     
-DataPacket::DataPacket(uint32_t size) {
+DataPacket::DataPacket() {
     _writeable = true;
-    _buffer = new uint8_t[size];
-    _size = size;
-    bzero(_buffer, _size);
+    bzero(_buffer, RT_BUF_SIZE);
     _endbit = 0;
 }
 
 DataPacket::DataPacket(uint8_t *buffer, uint32_t length) {
     _writeable = false;
-    _buffer = new uint8_t(length);
-    _size = length;
-    memcpy(_buffer, buffer, _size);
-    _endbit = _size*8;
+    bzero(_buffer, RT_BUF_SIZE);
+    if (length > RT_BUF_SIZE) {
+        length = RT_BUF_SIZE;
+    }
+    memcpy(_buffer, buffer, length);
+    _endbit = length*8;
 }
 
 DataPacket::~DataPacket() {
+    /*
     if (_buffer != NULL) {
-        free(_buffer);
+        delete[] _buffer;
     }
+    */
 }
 
 
@@ -134,17 +136,17 @@ DataPacket::packGPSData(TinyGPSPlus gps) {
 
 #ifdef ROCKETTEL_BASESTATION
 void 
-DataPacket::unpackGPS(DynamicJsonDocument &output) {
+DataPacket::unpackGPS(JsonDocument &output) {
     int64_t c = readBits(48);
     int64_t ulat=(c/lonVals-latVals/2)*180;
     int64_t ulon=(c%lonVals-lonVals/2)*360;
     
-    output["rocket"]["gps"]["lat"] = (float)ulat/(float)latVals;
-    output["rocket"]["gps"]["lon"] = (float)ulon/(float)lonVals;
+    output["rocket"]["gps"]["lat"] = (double)ulat/(double)latVals;
+    output["rocket"]["gps"]["lon"] = (double)ulon/(double)lonVals;
 }
 
 void
-DataPacket::unpackToJSON(DynamicJsonDocument &output) {
+DataPacket::unpackToJSON(JsonDocument &output) {
     uint8_t hdr4_1 = readBitsInt(4);
     uint8_t version = readBitsInt(8);
     uint8_t hdr4_2 = readBitsInt(4);
@@ -177,7 +179,6 @@ DataPacket::unpackToJSON(DynamicJsonDocument &output) {
                 }
             }
             break;
-
         }
     }
 
