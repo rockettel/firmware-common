@@ -119,10 +119,12 @@ const int lonVals = int(pow(2.0, 24.5));
 
 #ifdef ROCKETTEL_AVPACK
 void
-DataPacket::packGPS(TinyGPSPlus gps) {
-    
+DataPacket::packGPSData(TinyGPSPlus gps) {
+    double lat = gps.location.lat();
+    double lon = gps.location.lng();
     int64_t ulat=(int64_t(lat*latVals/180)+latVals/2)%latVals;
     int64_t ulon=(int64_t(lon*lonVals/360)+lonVals/2)%lonVals;
+    writeBits(6, HEADER_GPS);
     writeBits(48, (ulat*lonVals)+ulon);
 }
 #endif
