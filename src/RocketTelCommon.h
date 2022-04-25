@@ -35,13 +35,12 @@ struct rt_data_type {
 // 0x20-0x3F for "outside" stuff
 #define HEADER_GPS  0x20
 #define HEADER_ACCELEROMETER 0x21
-#define HEADER_TEMP_OUTSIDE  0x22
+#define HEADER_OUTSIDE_TPH  0x22 // Temp/Pressure/Humidity.  BME/BMP280.
+
 
 #ifdef __ROCKETTEL_COMMON_CPP__
 struct rt_data_type rt_data_types[] = {
     {HEADER_BATTERY_LEVEL, "battery_level", 0x01, 1, 7, 0},
-    {HEADER_ACCELEROMETER, "acceleration", 0x01, 3, 5, 0},
-    {HEADER_TEMP_OUTSIDE, "outside_temp", 0x01, 1, 5, 0}
 };
 #endif
 
