@@ -129,6 +129,34 @@ DataPacket::packGPSData(TinyGPSPlus gps) {
     writeBits(6, HEADER_GPS);
     writeBits(48, (ulat*lonVals)+ulon);
 }
+
+
+// 10 bits apiece.  We ought to revisit.
+const int tempBits = 10;
+const int pressBits = 10;
+void
+DataPacket::packTPHData(float temperature, float pressure, float humidity) {
+    // no humidity for now
+    // packing specific to a BMP280.   FIXME?  It's an OK range, though.
+    // if somebody starts launching in Antarctica we'll do something
+    // temp range -40 - 85.  Res 0.01
+    // pressure range 300 - 1100.  Res 0.01. 
+    if (temperature < -40.0) { temperature = -40.0; }
+    if (temperature > 85.0) { temperature = 80.0; }
+    if (pressure < 300) { pressure = 300.0; }
+    if (pressure > 1100) { pressure = 1100.0; }
+    temperature += 40.0; // now to 0.0-125
+    temperature /= 125.0; // now to 0.0-0.1
+    temperature *= pow(2.0, tempBits); // now to bitrange above.
+
+    pressure -= 300; // now to 0-800
+    pressure /= 800.0;
+    pressure *= pow(2.0, pressBits);
+
+    writeBits(6, HEADER_OUTSIDE_TPH);
+    writeBits(tempBits, (int)temperature);
+    writeBits(pressBits, (int)pressure);
+}
 #endif
 
 
@@ -143,6 +171,23 @@ DataPacket::unpackGPS(JsonDocument &output) {
     
     output["rocket"]["gps"]["lat"] = (double)ulat/(double)latVals;
     output["rocket"]["gps"]["lon"] = (double)ulon/(double)lonVals;
+}
+
+void 
+DataPacket::unpackTPH(JsonDocument &output) {
+    int32_t temp_i = readBits(tempBits);
+    int32_T press_i = readBits(pressBits);
+
+    float temperature = temp_i / pow(2.0, tempBits);
+    float pressure = press_i / pow(2.0, pressBits);
+    temperature *= 125.0;
+    pressure *= 800.0;   
+
+    temperature -= 40.0;
+    pressure += 300.0;
+
+    output["rocket"]["outside_temp"] = temperature;
+    output["rocket"]["outside_pressure"] = pressure;
 }
 
 void
@@ -173,6 +218,7 @@ DataPacket::unpackToJSON(JsonDocument &output) {
             unpackGPS(output);
             break;
         case HEADER_OUTSIDE_TPH:
+            unpackTPH(output);
             break;
         default:
             for (int i=0; i<(sizeof(rt_data_types)/sizeof(struct rt_data_type)); i++) {

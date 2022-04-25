@@ -56,6 +56,7 @@ class DataPacket {
     protected:
 #ifdef ROCKETTEL_BASESTATION
         void unpackGPS(JsonDocument &output);
+        void unpackTPH(JsonDocument &output);
 #endif
         inline uint64_t readBits(uint32_t count, uint64_t accum);
         inline void writeBits(uint32_t count, uint64_t value);
@@ -73,6 +74,7 @@ class DataPacket {
         void initHeader(uint8_t group, uint8_t id);
 
 #ifdef ROCKETTEL_AVPACK
+        void packTPHData(float temperature, float pressure, float humidity);
         void packGPSData(TinyGPSPlus gps);
 #endif
 
