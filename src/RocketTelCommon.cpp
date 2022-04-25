@@ -154,8 +154,8 @@ DataPacket::unpackToJSON(JsonDocument &output) {
         output["rocket"]["error"] = "Not a RocketTel packet";
         return;
     }
-    output["rocket"]["group"] = readBitsInt(6);
-    output["rocket"]["id"] = readBitsInt(6);
+    output["rocket"]["groupId"] = readBitsInt(6);
+    output["rocket"]["rocketId"] = readBitsInt(6);
     if (version > ROCKETTEL_VERSION) {
         output["rocket"]["error"] = "RocketTel AVPack too new";
         return;
@@ -171,6 +171,8 @@ DataPacket::unpackToJSON(JsonDocument &output) {
         switch(hdr) {
         case HEADER_GPS:
             unpackGPS(output);
+            break;
+        case HEADER_OUTSIDE_TPH:
             break;
         default:
             for (int i=0; i<(sizeof(rt_data_types)/sizeof(struct rt_data_type)); i++) {
