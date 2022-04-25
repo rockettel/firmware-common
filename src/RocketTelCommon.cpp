@@ -148,7 +148,6 @@ DataPacket::packTPHData(float temperature, float pressure, float humidity) {
     temperature += 40.0; // now to 0.0-125
     temperature /= 125.0; // now to 0.0-0.1
     temperature *= pow(2.0, tempBits); // now to bitrange above.
-
     pressure -= 300; // now to 0-800
     pressure /= 800.0;
     pressure *= pow(2.0, pressBits);
