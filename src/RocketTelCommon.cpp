@@ -118,6 +118,9 @@ DataPacket::initHeader(uint8_t group, uint8_t id) {
 
 const int latVals = int(pow(2.0, 23.5));
 const int lonVals = int(pow(2.0, 24.5));
+// 10 bits apiece.  We ought to revisit.
+const int tempBits = 10;
+const int pressBits = 10;
 
 #ifdef ROCKETTEL_AVPACK
 void
@@ -131,9 +134,7 @@ DataPacket::packGPSData(TinyGPSPlus gps) {
 }
 
 
-// 10 bits apiece.  We ought to revisit.
-const int tempBits = 10;
-const int pressBits = 10;
+
 void
 DataPacket::packTPHData(float temperature, float pressure, float humidity) {
     // no humidity for now
@@ -175,13 +176,11 @@ DataPacket::unpackGPS(JsonDocument &output) {
 void 
 DataPacket::unpackTPH(JsonDocument &output) {
     int32_t temp_i = readBits(tempBits);
-    int32_T press_i = readBits(pressBits);
-
-    float temperature = temp_i / pow(2.0, tempBits);
-    float pressure = press_i / pow(2.0, pressBits);
+    int32_t press_i = readBits(pressBits);    
+    float temperature = (float)temp_i / pow(2.0, tempBits);
+    float pressure = (float)press_i / pow(2.0, pressBits);
     temperature *= 125.0;
     pressure *= 800.0;   
-
     temperature -= 40.0;
     pressure += 300.0;
 
