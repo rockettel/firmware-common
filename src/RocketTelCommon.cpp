@@ -251,6 +251,39 @@ DataPacket::unpackFlags(JsonDocument &output, int version) {
 }
 
 int32_t
+DataPacket::packToRocket(JsonDocument &input) {
+    if (!input.containsKey("groupId") || !input.containsKey("rocketId")) {
+        return RETVAL_ERR;
+    }
+    int groupId = input["groupId"];
+    int rocketId = input["rocketId"];
+
+    initHeader(groupId, rocketId);
+
+    
+    for (int i=0; i<(sizeof(rt_cmd_data_types)/sizeof(struct rt_data_type)); i++) {
+        struct rt_data_type rt_cmd = rt_cmd_data_types[i];
+
+        if (input.containsKey(rt_cmd.name)) {
+            switch(rt_cmd.bits) {
+            case 1: { 
+                bool val = input[rt_cmd.name];
+                writeBits(6,rt_cmd.header);
+                writeBool(val);
+                break;
+            }
+            default:
+                break;
+            }
+        }
+    }
+    writeBits(6, 0);
+    
+    return RETVAL_OK;
+
+}
+
+int32_t
 DataPacket::unpackToJSON(JsonDocument &output) {
     uint8_t hdr4_1 = readBitsInt(4);
     uint8_t version = readBitsInt(8);

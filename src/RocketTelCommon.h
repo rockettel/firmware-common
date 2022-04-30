@@ -40,10 +40,18 @@ struct rt_data_type {
 #define HEADER_ACCELEROMETER 0x21
 #define HEADER_OUTSIDE_TPH  0x22 // Temp/Pressure/Humidity.  BME/BMP280.
 
+#define CMD_HEADER_FLIGHTMODE  0x01
+#define CMD_HEADER_ID          0x02
+#define CMD_HEADER_TEST        0x03
 
 #ifdef __ROCKETTEL_COMMON_CPP__
 struct rt_data_type rt_data_types[] = {
     {HEADER_BATTERY_LEVEL, "battery_level", 0x01, 1, 7, 0},
+};
+
+struct rt_data_type rt_cmd_data_types[] = {
+    {CMD_HEADER_FLIGHTMODE, "flightMode", 0x01, 1, 1, 0},
+    {CMD_HEADER_TEST, "testData", 0x01, 1, 1, 0},
 };
 #endif
 
@@ -92,7 +100,7 @@ class DataPacket {
 #endif
 
 #ifdef ROCKETTEL_BASESTATION
-        void packToRocket(uint8_t groupId, uint8_t rocketId);
+        int32_t packToRocket(JsonDocument &input);
         int32_t unpackToJSON(JsonDocument &output);
 #endif
 };
