@@ -194,6 +194,33 @@ DataPacket::packTPHData(float temperature, float pressure, float humidity) {
     writeFloat(temperature, -40.0, 85.0, tempBits);
     writeFloat(pressure, 300.0, 1100.0, pressBits);
 }
+
+int32_t
+DataPacket::unpackFromBaseStation(uint8_t myGroupId, uint8_t myRocketId) {
+    uint8_t hdr4_1 = readBitsInt(4);
+    uint8_t version = readBitsInt(8);
+    uint8_t hdr4_2 = readBitsInt(4);
+    if (hdr4_1 == ROCKETTEL_HEADER4_1 && hdr4_2 == ROCKETTEL_HEADER4_2) {
+        /* This is another rocket talking to a basestation */
+        return RETVAL_IGNORE;
+    }
+
+    if (hdr4_1 != ROCKETTEL_HEADER4_2 || hdr4_2 != ROCKETTEL_HEADER4_1) {
+        return RETVAL_ERR;
+    }
+    uint8_t groupId = readBitsInt(6);
+    uint8_t rocketId = readBitsInt(6);
+
+    if (groupId != myGroupId || rocketId != myRocketId) {
+        return RETVAL_IGNORE;
+    }
+    
+    if (version > ROCKETTEL_VERSION) {
+        return RETVAL_ERR;
+    }
+
+    return RETVAL_OK;
+}
 #endif
 
 

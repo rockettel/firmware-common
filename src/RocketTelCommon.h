@@ -84,6 +84,8 @@ class DataPacket {
         void initHeader(uint8_t groupId, uint8_t rocketId);
 
 #ifdef ROCKETTEL_AVPACK
+        int32_t unpackFromBaseStation(uint8_t groupId, uint8_t rocketId);
+
         void packFlags(bool flightMode);
         void packTPHData(float temperature, float pressure, float humidity);
         void packGPSData(TinyGPSPlus gps);
