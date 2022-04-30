@@ -11,7 +11,10 @@
 #include <TinyGPSPlus.h>
 #endif
 
-
+#define RETVAL_OK       0
+#define RETVAL_ERR      -1
+#define RETVAL_IGNORE   -2
+#define RETVAL_FATAL    -3
 
 #define ROCKETTEL_HEADER4_1 0x3 // 00111010
 #define ROCKETTEL_VERSION     0x01
@@ -55,31 +58,40 @@ class DataPacket {
         
     protected:
 #ifdef ROCKETTEL_BASESTATION
-        void unpackGPS(JsonDocument &output);
-        void unpackTPH(JsonDocument &output);
+        void unpackGPS(JsonDocument &output, int version);
+        void unpackTPH(JsonDocument &output, int version);
+        void unpackFlags(JsonDocument &output, int version);
 #endif
         inline uint64_t readBits(uint32_t count, uint64_t accum);
         inline void writeBits(uint32_t count, uint64_t value);
     public:
         DataPacket();
-        DataPacket(uint8_t *buffer, uint32_t length);
+        DataPacket(uint8_t *buffer, size_t length);
         ~DataPacket();
         
         
         uint32_t readBitsInt(uint8_t bits);
         void writeBitsInt(uint8_t bits, uint32_t value);
        
-        void getBuffer(uint8_t *buffer, uint32_t *length);
+        bool readBool();
+        void writeBool(bool value);
 
-        void initHeader(uint8_t group, uint8_t id);
+        float readFloat(float min, float max, uint8_t bits);
+        void writeFloat(float val, float min, float max, uint8_t bits);
+        
+        void getBuffer(uint8_t *buffer, size_t *length);
+
+        void initHeader(uint8_t groupId, uint8_t rocketId);
 
 #ifdef ROCKETTEL_AVPACK
+        void packFlags(bool flightMode);
         void packTPHData(float temperature, float pressure, float humidity);
         void packGPSData(TinyGPSPlus gps);
 #endif
 
 #ifdef ROCKETTEL_BASESTATION
-        void unpackToJSON(JsonDocument &output);
+        void packToRocket(uint8_t groupId, uint8_t rocketId);
+        int32_t unpackToJSON(JsonDocument &output);
 #endif
 };
 

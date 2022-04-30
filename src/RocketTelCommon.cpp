@@ -7,7 +7,7 @@ DataPacket::DataPacket() {
     _endbit = 0;
 }
 
-DataPacket::DataPacket(uint8_t *buffer, uint32_t length) {
+DataPacket::DataPacket(uint8_t *buffer, size_t length) {
     _writeable = false;
     bzero(_buffer, RT_BUF_SIZE);
     if (length > RT_BUF_SIZE) {
@@ -99,20 +99,61 @@ DataPacket::writeBitsInt(uint8_t bits, uint32_t value) {
     writeBits(bits, value);
 }
 
+bool
+DataPacket::readBool() {
+    uint32_t ret = readBits(1, 0);
+    if (ret == 1) {
+        return true;
+    }
+    return false;
+}
+
+void
+DataPacket::writeBool(bool value) {
+    if (value) { writeBits(1,1); } else { writeBits(1,0); }
+}
+
+float 
+DataPacket::readFloat(float min, float max, uint8_t bits) {
+    int32_t temp_i = readBits(bits);
+    float val = (float)temp_i / pow(2.0, bits);
+    val *= (max-min);
+    val += min;
+    return val;
+}
+
+
 void 
-DataPacket::getBuffer(uint8_t *buffer, uint32_t *length) {
+DataPacket::writeFloat(float val, float min, float max, uint8_t bits) {
+    if (val < min) { val = min; }
+    if (val > max) { val = max; }
+    val -= min; 
+    val /= (max-min); 
+    val *= pow(2.0, bits); // now to bitrange above.
+    writeBits(bits, val);
+}
+
+
+void 
+DataPacket::getBuffer(uint8_t *buffer, size_t *length) {
     *length = _endbit/8;
     if (_endbit % 8) { *length += 1; }
     memcpy(buffer, _buffer, *length);
 }
 
 void
-DataPacket::initHeader(uint8_t group, uint8_t id) {
+DataPacket::initHeader(uint8_t groupId, uint8_t rocketId) {
+#ifdef ROCKETTEL_AVPACK
     writeBitsInt(4, ROCKETTEL_HEADER4_1);
     writeBitsInt(8, ROCKETTEL_VERSION);
     writeBitsInt(4, ROCKETTEL_HEADER4_2);
-    writeBitsInt(6, group);
-    writeBitsInt(6, id);
+#else // BASESTATION
+    writeBitsInt(4, ROCKETTEL_HEADER4_2);
+    writeBitsInt(8, ROCKETTEL_VERSION);
+    writeBitsInt(4, ROCKETTEL_HEADER4_1);
+#endif
+    writeBitsInt(6, groupId);
+    writeBitsInt(6, rocketId);
 
 }
 
@@ -123,17 +164,21 @@ const int tempBits = 10;
 const int pressBits = 10;
 
 #ifdef ROCKETTEL_AVPACK
+
+void 
+DataPacket::packFlags(bool flightMode) {
+    writeBool(flightMode);
+}
+
 void
 DataPacket::packGPSData(TinyGPSPlus gps) {
-    double lat = gps.location.lat();
-    double lon = gps.location.lng();
+    float lat = gps.location.lat();
+    float lon = gps.location.lng();
     int64_t ulat=(int64_t(lat*latVals/180)+latVals/2)%latVals;
     int64_t ulon=(int64_t(lon*lonVals/360)+lonVals/2)%lonVals;
     writeBits(6, HEADER_GPS);
     writeBits(48, (ulat*lonVals)+ulon);
 }
-
-
 
 void
 DataPacket::packTPHData(float temperature, float pressure, float humidity) {
@@ -142,20 +187,12 @@ DataPacket::packTPHData(float temperature, float pressure, float humidity) {
     // if somebody starts launching in Antarctica we'll do something
     // temp range -40 - 85.  Res 0.01
     // pressure range 300 - 1100.  Res 0.01. 
-    if (temperature < -40.0) { temperature = -40.0; }
-    if (temperature > 85.0) { temperature = 80.0; }
-    if (pressure < 300) { pressure = 300.0; }
-    if (pressure > 1100) { pressure = 1100.0; }
-    temperature += 40.0; // now to 0.0-125
-    temperature /= 125.0; // now to 0.0-0.1
-    temperature *= pow(2.0, tempBits); // now to bitrange above.
-    pressure -= 300; // now to 0-800
-    pressure /= 800.0;
-    pressure *= pow(2.0, pressBits);
+    
+
 
     writeBits(6, HEADER_OUTSIDE_TPH);
-    writeBits(tempBits, (int)temperature);
-    writeBits(pressBits, (int)pressure);
+    writeFloat(temperature, -40.0, 85.0, tempBits);
+    writeFloat(pressure, 300.0, 1100.0, pressBits);
 }
 #endif
 
@@ -164,59 +201,66 @@ DataPacket::packTPHData(float temperature, float pressure, float humidity) {
 
 #ifdef ROCKETTEL_BASESTATION
 void 
-DataPacket::unpackGPS(JsonDocument &output) {
+DataPacket::unpackGPS(JsonDocument &output, int version) {
     int64_t c = readBits(48);
     int64_t ulat=(c/lonVals-latVals/2)*180;
     int64_t ulon=(c%lonVals-lonVals/2)*360;
     
-    output["rocket"]["gps"]["lat"] = (double)ulat/(double)latVals;
-    output["rocket"]["gps"]["lon"] = (double)ulon/(double)lonVals;
+    output["rocket"]["gps"]["lat"] = (float)ulat/(float)latVals;
+    output["rocket"]["gps"]["lon"] = (float)ulon/(float)lonVals;
 }
 
 void 
-DataPacket::unpackTPH(JsonDocument &output) {
-    int32_t temp_i = readBits(tempBits);
-    int32_t press_i = readBits(pressBits);    
-    float temperature = (float)temp_i / pow(2.0, tempBits);
-    float pressure = (float)press_i / pow(2.0, pressBits);
-    temperature *= 125.0;
-    pressure *= 800.0;   
-    temperature -= 40.0;
-    pressure += 300.0;
+DataPacket::unpackTPH(JsonDocument &output, int version) {
 
-    output["rocket"]["outside_temp"] = temperature;
-    output["rocket"]["outside_pressure"] = pressure;
+
+    output["rocket"]["outside_temp"] = readFloat(-40, 85, tempBits);
+    output["rocket"]["outside_pressure"] = readFloat(300, 1100, pressBits);
 }
 
-void
+void 
+DataPacket::unpackFlags(JsonDocument &output, int version) {
+    output["rocket"]["flightMode"] = readBool();
+}
+
+int32_t
 DataPacket::unpackToJSON(JsonDocument &output) {
     uint8_t hdr4_1 = readBitsInt(4);
     uint8_t version = readBitsInt(8);
     uint8_t hdr4_2 = readBitsInt(4);
-    if (hdr4_1 != ROCKETTEL_HEADER4_1 || hdr4_2 != ROCKETTEL_HEADER4_2) {
-        output["rocket"]["error"] = "Not a RocketTel packet";
-        return;
-    }
-    output["rocket"]["groupId"] = readBitsInt(6);
-    output["rocket"]["rocketId"] = readBitsInt(6);
-    if (version > ROCKETTEL_VERSION) {
-        output["rocket"]["error"] = "RocketTel AVPack too new";
-        return;
+    if (hdr4_1 == ROCKETTEL_HEADER4_2 && hdr4_2 == ROCKETTEL_HEADER4_1) {
+        /* This is another basestation talking to a rocket -- ignore */
+        return RETVAL_IGNORE;
     }
 
+
+    if (hdr4_1 != ROCKETTEL_HEADER4_1 || hdr4_2 != ROCKETTEL_HEADER4_2) {
+        output["rocket"]["error"] = "Not a RocketTel packet";
+        return RETVAL_ERR;
+    }
+    output["rocket"]["rocketId"]["group"] = readBitsInt(6);
+    output["rocket"]["rocketId"]["rocket"] = readBitsInt(6);
+    if (version > ROCKETTEL_VERSION) {
+        output["rocket"]["error"] = "RocketTel AVPack too new";
+        return RETVAL_ERR;
+    }
+
+    /*** Single-Bit FLAGS ***/
+    unpackFlags(output, version);
+    
 
     while((_endbit-_curbit) > 6) {
         uint8_t hdr = readBitsInt(6);
         if (hdr == 0x0) {
-            return;
+            return RETVAL_OK;
         }
 
         switch(hdr) {
         case HEADER_GPS:
-            unpackGPS(output);
+            unpackGPS(output, version);
             break;
         case HEADER_OUTSIDE_TPH:
-            unpackTPH(output);
+            unpackTPH(output, version);
             break;
         default:
             for (int i=0; i<(sizeof(rt_data_types)/sizeof(struct rt_data_type)); i++) {
@@ -227,9 +271,7 @@ DataPacket::unpackToJSON(JsonDocument &output) {
             break;
         }
     }
-
-
-    
+    return RETVAL_OK;
 }
 #endif
 
