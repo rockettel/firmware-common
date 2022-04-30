@@ -262,8 +262,8 @@ DataPacket::unpackGPS(JsonDocument &output, int version) {
     
     output["rocket"]["gps"]["lat"] = (float)ulat/(float)latVals;
     output["rocket"]["gps"]["lon"] = (float)ulon/(float)lonVals;
-    output["rocket"]["gps"]["alt"] = alt
-    output["rocket"]["gps"]]"satellites"] = sats
+    output["rocket"]["gps"]["alt"] = alt;
+    output["rocket"]["gps"]["satellites"] = sats;
 
 }
 
