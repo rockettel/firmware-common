@@ -29,6 +29,12 @@ struct rt_data_type {
     uint8_t divisor;
 };
 
+struct rt_cmd_value {
+    uint8_t header;
+    uint32_t i_value;
+    float f_value;
+};
+
 
 // Not really "official" or set in stone but:
 // 0x0 is reserved
@@ -54,6 +60,8 @@ struct rt_data_type rt_cmd_data_types[] = {
     {CMD_HEADER_TEST, "testData", 0x01, 1, 1, 0},
 };
 #endif
+
+
 
 #define RT_BUF_SIZE 64
 
@@ -92,7 +100,8 @@ class DataPacket {
         void initHeader(uint8_t groupId, uint8_t rocketId);
 
 #ifdef ROCKETTEL_AVPACK
-        int32_t unpackFromBaseStation(uint8_t groupId, uint8_t rocketId);
+        int32_t unpackFromBaseStation(uint8_t groupId, uint8_t rocketId, 
+                            struct rt_cmd_value *vals, size_t &nvals);
 
         void packFlags(bool flightMode);
         void packTPHData(float temperature, float pressure, float humidity);

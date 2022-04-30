@@ -196,7 +196,10 @@ DataPacket::packTPHData(float temperature, float pressure, float humidity) {
 }
 
 int32_t
-DataPacket::unpackFromBaseStation(uint8_t myGroupId, uint8_t myRocketId) {
+DataPacket::unpackFromBaseStation(uint8_t myGroupId, uint8_t myRocketId,
+                            struct rt_cmd_value *vals, size_t &nvals) {
+    size_t maxvals = nvals;
+    nvals = 0;
     uint8_t hdr4_1 = readBitsInt(4);
     uint8_t version = readBitsInt(8);
     uint8_t hdr4_2 = readBitsInt(4);
@@ -219,6 +222,25 @@ DataPacket::unpackFromBaseStation(uint8_t myGroupId, uint8_t myRocketId) {
         return RETVAL_ERR;
     }
 
+    while((_endbit-_curbit) > 6) {
+        uint8_t hdr = readBitsInt(6);
+        if (hdr == 0x0) {
+          return RETVAL_OK;
+        }
+
+        switch(hdr) {
+        default:
+           for (int i=0; i<(sizeof(rt_cmd_data_types)/sizeof(struct rt_data_type)); i++) {
+                struct rt_data_type cmd = rt_cmd_data_types[i];
+                if (hdr == cmd.header) {
+                    vals[nvals].header = hdr;
+                    vals[nvals].i_value = readBits(cmd.bits);
+                    nvals++;
+                }
+            }
+            break;
+        }
+    }
     return RETVAL_OK;
 }
 #endif
