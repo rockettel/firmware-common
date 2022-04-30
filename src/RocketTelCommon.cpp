@@ -178,6 +178,8 @@ DataPacket::packGPSData(TinyGPSPlus gps) {
     int64_t ulon=(int64_t(lon*lonVals/360)+lonVals/2)%lonVals;
     writeBits(6, HEADER_GPS);
     writeBits(48, (ulat*lonVals)+ulon);
+    writeBitsInt(15, gps.altitude.meters());
+    writeBitsInt(4, gps.satellites.value());
 }
 
 void
@@ -254,9 +256,15 @@ DataPacket::unpackGPS(JsonDocument &output, int version) {
     int64_t c = readBits(48);
     int64_t ulat=(c/lonVals-latVals/2)*180;
     int64_t ulon=(c%lonVals-lonVals/2)*360;
+    int64_t alt = readBitsInt(15);
+    int64_t sats = readBitsInt(5);
+
     
     output["rocket"]["gps"]["lat"] = (float)ulat/(float)latVals;
     output["rocket"]["gps"]["lon"] = (float)ulon/(float)lonVals;
+    output["rocket"]["gps"]["alt"] = alt
+    output["rocket"]["gps"]]"satellites"] = sats
+
 }
 
 void 
