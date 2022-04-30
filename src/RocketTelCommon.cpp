@@ -271,8 +271,8 @@ void
 DataPacket::unpackTPH(JsonDocument &output, int version) {
 
 
-    output["rocket"]["outside_temp"] = readFloat(-40, 85, tempBits);
-    output["rocket"]["outside_pressure"] = readFloat(300, 1100, pressBits);
+    output["rocket"]["outsideTemp"] = readFloat(-40, 85, tempBits);
+    output["rocket"]["outsidePressure"] = readFloat(300, 1100, pressBits);
 }
 
 void 
