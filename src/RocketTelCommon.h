@@ -20,13 +20,21 @@
 #define ROCKETTEL_VERSION     0x01
 #define ROCKETTEL_HEADER4_2 0xC // 11000101
 
+#define ROCKETTEL_RT_HDR_BITS 6
+#define ROCKETTEL_ROCKETID_BITS 6
+#define ROCKETTEL_ROCKETGRP_BITS 6
+
 struct rt_data_type {
     uint8_t header;
     const char *name;
     uint8_t version;
     uint8_t num_values;
+    uint8_t format;
     uint8_t bits;
-    uint8_t divisor;
+    int32_t i_min;
+    int32_t i_max;
+    float f_min;
+    float f_max;
 };
 
 struct rt_cmd_value {
@@ -35,29 +43,39 @@ struct rt_cmd_value {
     float f_value;
 };
 
+#define ROCKETTEL_RT_FMT_BOOL 0x01
+#define ROCKETTEL_RT_FMT_UINT 0x02
+#define ROCKETTEL_RT_FMT_INT  0x03
+#define ROCKETTEL_RT_FMT_FLOAT 0x04
 
 // Not really "official" or set in stone but:
 // 0x0 is reserved
 // 0x1-0x1F for "onboard" stuff
 #define HEADER_BATTERY_LEVEL 0x01
 #define HEADER_BATTERY_CAPACITY 0x02
+#define HEADER_BATTERY_VOLTAGE 0x03
 // 0x20-0x3F for "outside" stuff
 #define HEADER_GPS  0x20
 #define HEADER_ACCELEROMETER 0x21
 #define HEADER_OUTSIDE_TPH  0x22 // Temp/Pressure/Humidity.  BME/BMP280.
 
 #define CMD_HEADER_FLIGHTMODE  0x01
-#define CMD_HEADER_ID          0x02
-#define CMD_HEADER_TEST        0x03
+#define CMD_HEADER_SETGROUPID  0x02
+#define CMD_HEADER_SETROCKETID 0x03
+#define CMD_HEADER_PIN         0x04
+#define CMD_HEADER_SETPIN      0x05
 
 #ifdef __ROCKETTEL_COMMON_CPP__
+/* Putting this here because it makes more sense, though it belongs in the cpp */
 struct rt_data_type rt_data_types[] = {
-    {HEADER_BATTERY_LEVEL, "battery_level", 0x01, 1, 7, 0},
+    {HEADER_BATTERY_LEVEL, "batteryLevel", 0x01, 1, 7, HEADER_RT_FMT_UINT, 0, 100, 0.0, 0.0},
+    {HEADER_BATTERY_VOLTAGE, "batteryVoltage", 0x01, 1, 7, HEADER_RT_FMT_FLOAT, 0, 0, 2.6, 4.3}
 };
 
 struct rt_data_type rt_cmd_data_types[] = {
-    {CMD_HEADER_FLIGHTMODE, "flightMode", 0x01, 1, 1, 0},
-    {CMD_HEADER_TEST, "testData", 0x01, 1, 1, 0},
+    {CMD_HEADER_FLIGHTMODE, "flightMode", 0x01, 1, 1, HEADER_RT_FMT_BOOL, 0, 0, 0.0, 0.0},
+    {CMD_HEADER_TEST, "setRocketId", 0x01, 1, ROCKETTEL_ROCKETID_BITS, HEADER_RT_FMT_UINT, 0, 0, 0.0, 0.0},
+    {CMD_HEADER_TEST, "setGroupId", 0x01, 1, ROCKETTEL_GROUPID_BITS, HEADER_RT_FMT_UINT, 0, 0, 0.0, 0.0},
 };
 #endif
 
