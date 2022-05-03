@@ -68,14 +68,14 @@ struct rt_cmd_value {
 #ifdef __ROCKETTEL_COMMON_CPP__
 /* Putting this here because it makes more sense, though it belongs in the cpp */
 struct rt_data_type rt_data_types[] = {
-    {HEADER_BATTERY_LEVEL, "batteryLevel", 0x01, 1, 7, HEADER_RT_FMT_UINT, 0, 100, 0.0, 0.0},
-    {HEADER_BATTERY_VOLTAGE, "batteryVoltage", 0x01, 1, 7, HEADER_RT_FMT_FLOAT, 0, 0, 2.6, 4.3}
+    {HEADER_BATTERY_LEVEL, "batteryLevel", 0x01, 1, 7, ROCKETTEL_RT_FMT_UINT, 0, 100, 0.0, 0.0},
+    {HEADER_BATTERY_VOLTAGE, "batteryVoltage", 0x01, 1, 7, ROCKETTEL_RT_FMT_FLOAT, 0, 0, 2.6, 4.3}
 };
 
 struct rt_data_type rt_cmd_data_types[] = {
-    {CMD_HEADER_FLIGHTMODE, "flightMode", 0x01, 1, 1, HEADER_RT_FMT_BOOL, 0, 0, 0.0, 0.0},
-    {CMD_HEADER_TEST, "setRocketId", 0x01, 1, ROCKETTEL_ROCKETID_BITS, HEADER_RT_FMT_UINT, 0, 0, 0.0, 0.0},
-    {CMD_HEADER_TEST, "setGroupId", 0x01, 1, ROCKETTEL_GROUPID_BITS, HEADER_RT_FMT_UINT, 0, 0, 0.0, 0.0},
+    {CMD_HEADER_FLIGHTMODE, "flightMode", 0x01, 1, 1, ROCKETTEL_RT_FMT_BOOL, 0, 0, 0.0, 0.0},
+    {CMD_HEADER_SETROCKETID, "setRocketId", 0x01, 1, ROCKETTEL_ROCKETID_BITS, ROCKETTEL_RT_FMT_UINT, 0, 0, 0.0, 0.0},
+    {CMD_HEADER_SETGROUPID, "setGroupId", 0x01, 1, ROCKETTEL_ROCKETGRP_BITS, ROCKETTEL_RT_FMT_UINT, 0, 0, 0.0, 0.0},
 };
 #endif
 
