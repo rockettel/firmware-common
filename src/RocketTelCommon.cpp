@@ -293,13 +293,33 @@ DataPacket::packToRocket(JsonDocument &input) {
         struct rt_data_type rt_cmd = rt_cmd_data_types[i];
 
         if (input.containsKey(rt_cmd.name)) {
-            switch(rt_cmd.bits) {
-            case 1: { 
-                bool val = input[rt_cmd.name];
+            switch(rt_cmd.format) {
+            case ROCKETTEL_RT_FMT_BOOL: {
+                bool bval = input[rt_cmd.name];
                 writeBits(ROCKETTEL_RT_HDR_BITS,rt_cmd.header);
-                writeBool(val);
+                writeBool(bval);
                 break;
             }
+            case ROCKETTEL_RT_FMT_INT: {
+                int32_t ival = input[rt_cmd.name];
+                writeBits(ROCKETTEL_RT_HDR_BITS, rt_cmd.header);
+                writeBitsInt(rt_cmd.bits, ival);
+                break;
+            }
+            case ROCKETTEL_RT_FMT_UINT: {
+                uint32_t uval = input[rt_cmd.name];
+                writeBits(ROCKETTEL_RT_HDR_BITS, rt_cmd.header);
+                writeBitsInt(rt_cmd.bits, uval);
+                break;
+            }
+            case ROCKETTEL_RT_FMT_FLOAT: {
+                float fval = input[rt_cmd.name];
+                writeBits(ROCKETTEL_RT_HDR_BITS, rt_cmd.header);
+                writeFloat(fval, rt_cmd.f_min, rt_cmd.f_max, rt_cmd.bits);
+                break;
+            }
+
+
             default:
                 break;
             }
